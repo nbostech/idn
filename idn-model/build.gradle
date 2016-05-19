@@ -18,7 +18,7 @@
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 
-group = 'org.wavelabs.in'
+group = 'in.wavelabs'
 version = '1.0'
 
 dependencies {
@@ -34,6 +34,7 @@ task sourceJar(type: Jar) {
     from sourceSets.main.allGroovy
 }
 
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -44,7 +45,17 @@ publishing {
                 classifier "sources"
             }
         }
-    }
+}
+repositories {
+            maven {
+                credentials {
+                    username = "wavelabs"
+                    password = "Zq952FI6o7Pz"
+                }
+                url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            }
+    
+}
     repositories {
         maven {
             url "$buildDir/repo" // change to point to your repo, e.g. http://my.org/repo
