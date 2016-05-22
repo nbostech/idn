@@ -14,52 +14,225 @@
  * limitations under the License.
  */
 
-//apply plugin: 'java'
-apply plugin: 'groovy'
+// gradle clean
+// gradle aMJar aMSJar aMDJar sAMJar sAMSJar sAMDJar myTask publishApiModelPublicationToProjRepoRepository
+
+apply plugin: 'java'
 apply plugin: 'maven-publish'
+apply plugin: 'signing'
+apply plugin: 'idea'
+apply plugin: 'jvm-component'
+apply plugin: 'java-lang'
 
 group = 'in.wavelabs'
 version = '1.0'
 
 dependencies {
    compile 'commons-collections:commons-collections:3.2.2'
-   compile 'org.codehaus.groovy:groovy-all:2.4.6'
 }
 
 repositories {
     mavenCentral()
 }
 
-task sourceJar(type: Jar) {
-    from sourceSets.main.allGroovy
+// avoids duplicates in a jar file
+tasks.withType(Jar) {
+    eachFile {
+        it.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
 }
 
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-
-            artifactId 'idn-model'
-            artifact sourceJar {
-                classifier "sources"
-            }
+sourceSets {
+    apiModel {
+        java {
+            srcDir 'src/apiModel/java'
         }
-}
-repositories {
-            maven {
-                credentials {
-                    username = "wavelabs"
-                    password = "Zq952FI6o7Pz"
-                }
-                url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-            }
-    
-}
-    repositories {
-        maven {
-            url "$buildDir/repo" // change to point to your repo, e.g. http://my.org/repo
+        resources {
+            srcDir 'src/apiModel/resources'
         }
     }
 }
+
+task apiModelJar(type: Jar, dependsOn:[classes]){
+    baseName = 'api-model'
+    from sourceSets.apiModel.output
+}
+
+task apiModelSourceJar(type: Jar){
+    baseName = 'api-model-sources'
+    from(sourceSets.apiModel.java)
+}
+
+task apiModelDocsJar(type: Jar, dependsOn: apiModelDocs) {
+    baseName = 'api-model-javadoc'
+    from apiModelDocs.destinationDir
+}
+
+task apiModelDocs(type: Javadoc) {
+    source = sourceSets.apiModel.java
+}
+
+signing {
+    sign apiModelJar
+    sign apiModelSourceJar
+    sign apiModelDocsJar
+}
+
+def signedFiles = {
+    ["signApiModelJar","signApiModelSourceJar","signApiModelDocsJar"].collectMany {
+        project.tasks."${it}".signatureFiles.collect { it }
+    }
+}
+
+publishing {
+    publications {
+        apiModel(MavenPublication) {
+            artifactId 'api-model'
+            artifact(apiModelJar) {
+            }
+            artifact(apiModelSourceJar) {
+                classifier "sources"
+            }
+            artifact(apiModelDocsJar) {
+                classifier "javadoc"
+            }
+            signedFiles().each { signedFile ->
+                artifact (signedFile) {
+                    def fileName=signedFile.name
+                    classifier = fileName.contains("-sources") ? "sources" : (fileName.contains("-javadoc")?'javadoc':null)
+                    extension  = 'jar.asc'
+                }
+            }
+            def signedPomFile = file("${project.projectDir}/build/publications/apiModel/pom-default.xml")
+            if(signedPomFile) {
+                artifact(signedPomFile) {
+                    classifier = null
+                    extension  = 'pom.asc'
+                }
+            }
+            pom.withXml {
+                asNode().appendNode('description',
+                                    'A demonstration of maven ApiModel customization')
+                def dependenciesNode = asNode().getAt("dependencies")
+
+                if(dependenciesNode) { dependenciesNode=dependenciesNode[0] }
+                else { dependenciesNode = asNode().appendNode('dependencies') }
+
+                //Iterate over the compile dependencies (we don't want the test ones), adding a <dependency> node for each
+                configurations.compile.allDependencies.each {
+                    def dependencyNode = dependenciesNode.appendNode('dependency')
+                    dependencyNode.appendNode('groupId', it.group)
+                    dependencyNode.appendNode('artifactId', it.name)
+                    dependencyNode.appendNode('version', it.version)
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name 'maven2'
+            credentials {
+                username = "wavelabs"
+                password = "Zq952FI6o7Pz"
+            }
+            url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+        }
+        maven {
+            name 'projRepo'
+            url "file:/${project.projectDir}/build/repo"
+        }
+        maven {
+            name 'nbosMaven'
+            //url "http://nexus1.nbostech.com:8081/nexus/content/repositories/wavelabs"
+            url "http://nexus1.nbostech.com:8081/nexus/content/repositories/wavelabs-snapshot"
+            credentials {
+                username = "admin"
+                password = "admin123"
+            }
+        }
+    }
+}
+
+
+task myTask << {
+    signedFiles().each {
+        println "signedfile: ${it}"
+    }
+//  println 'archives:'
+//  configurations.archives.each {
+//    println "  : ${it}"
+//  }
+}
+
+/*
+uploadArchives {
+    println "${this.class.name}"
+    repositories {
+        println "This is here"
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> 
+              println" before deployment: ${deployment}" //signing.signPom(deployment) 
+            }
+        }
+    }
+}
+*/
+
+// gradle build
+//    - build/classes/
+//    - build/libs/idn-model-1.0.jar
+
+// gradle generatePomFileForIdnModelPublication
+//    - build/publications/idnModel/pom-default.xml
+
+// gradle publishIdnModelPublicationToProjRepoRepository
+//    - build/repo/in/wavelabs/idn-model/1.0/idn-model-1.0.jar
+
+// gradle clean apiModelJar apiModelSourceJar apiModelDocsJar sAMJ sAMSJ sAMDJ myTask publishApiModelPublicationToProjRepoRepository
+
+// gradle clean
+// gradle aMJar aMSJar aMDJar sAMJar sAMSJar sAMDJar myTask publishApiModelPublicationToProjRepoRepository
+
+
+
+//task learnGradle << {
+//  println 'dump :' + project.configurations.getAll().dump()
+//  println 'artifacts:'
+//  configurations.default.allArtifacts.each {
+//    println "  : ${it.name} , ${it.getFile().name}"
+//  }
+//  println 'compile:'
+//  configurations.compile.each {
+//    println "  : ${it.class.name} ${it.name}"
+//  }
+//
+//  println 'components'
+//  println "  : ${components.class.name}"
+//  components.each {
+//    println "     : ${it.class.name} ${it.name}"
+//  }
+//
+//  println 'sourceSets'
+//  println "  : ${sourceSets.class.name}"
+//  sourceSets.each { SourceSet sourceSet ->
+//    println "     : ${sourceSet.name}"
+//    println "       all-sources"
+//    sourceSet.getAllSource().getSrcDirs().each { d ->
+//      println "         :dir:${d.name}"
+//    }
+///*
+//    println "       groovy-sources"
+//    sourceSet.getAllGroovy().getSrcDirs().each { d ->
+//      println "         :dir:${d.name}"
+//    }
+//*/
+//  }
+///*
+//  println 'archives:'
+//  configurations.archives.each {
+//    println "  : ${it}"
+//  }
+//*/
+//}
+
 
