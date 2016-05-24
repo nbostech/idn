@@ -18,6 +18,13 @@
 // gradle generatePomFileForApiModelPublication
 // gradle aMJar aMSJar aMDJar sAMJar sAMSJar sAMDJar myTask publishApiModelPublicationToProjRepoRepository
 
+// gradle clean
+// gradle aMJar aMSJar aMDJar sAMJar sAMSJar sAMDJar gPomFileFAMP
+// gradle --rerun-tasks signApiModelPomF
+// gradle pAMPublicationToProjR
+// gradle pAMPublicationToNbosMavenR
+// gradle pAMPublicationToMaven2R
+
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
@@ -26,7 +33,7 @@ apply plugin: 'jvm-component'
 apply plugin: 'java-lang'
 
 group = 'in.wavelabs'
-version = '1.0'
+version = '0.2'
 
 dependencies {
    compile 'commons-collections:commons-collections:3.2.2'
@@ -34,6 +41,11 @@ dependencies {
 
 repositories {
     mavenCentral()
+}
+
+ext {
+    apiModelPomFile = file("${project.projectDir}/build/publications/apiModel/pom-default.xml")
+    signedApiModelPomFile = file("${project.projectDir}/build/publications/apiModel/pom-default.xml.asc")
 }
 
 // avoids duplicates in a jar file
@@ -79,11 +91,16 @@ signing {
     sign apiModelDocsJar
 }
 
+task signApiModelPomFile(type:Sign){
+    sign project.ext.apiModelPomFile
+}
+
 def signedFiles = {
     ["signApiModelJar","signApiModelSourceJar","signApiModelDocsJar"].collectMany {
         project.tasks."${it}".signatureFiles.collect { it }
     }
 }
+
 def appendDependencies = { pomNode ->
     def dependenciesNode = pomNode.getAt("dependencies")
 
@@ -118,9 +135,8 @@ publishing {
                     extension  = 'jar.asc'
                 }
             }
-            def signedPomFile = file("${project.projectDir}/build/publications/apiModel/pom-default.xml")
-            if(signedPomFile) {
-                artifact(signedPomFile) {
+            if (project.ext.signedApiModelPomFile) {
+                artifact (project.ext.signedApiModelPomFile) {
                     classifier = null
                     extension  = 'pom.asc'
                 }
@@ -163,20 +179,6 @@ task myTask << {
         println "signedfile: ${it}"
     }
 }
-
-/*
-uploadArchives {
-    println "${this.class.name}"
-    repositories {
-        println "This is here"
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> 
-              println" before deployment: ${deployment}" //signing.signPom(deployment) 
-            }
-        }
-    }
-}
-*/
 
 // gradle build
 //    - build/classes/
