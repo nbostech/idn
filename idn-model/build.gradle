@@ -33,7 +33,7 @@ apply plugin: 'jvm-component'
 apply plugin: 'java-lang'
 
 group = 'in.wavelabs'
-version = '0.1'
+version = '0.2'
 
 dependencies {
    compile 'commons-collections:commons-collections:3.2.2'
@@ -50,8 +50,8 @@ repositories {
 }
 
 ext {
-    apiModelPomFile = file("${project.projectDir}/build/publications/apiModel/pom-default.xml")
-    signedApiModelPomFile = file("${project.projectDir}/build/publications/apiModel/pom-default.xml.asc")
+    apiModelPomFile = file("${project.projectDir}/build/api-model-${version}.pom")
+    signedApiModelPomFile = file("${project.projectDir}/build/api-model-${version}.asc")
 }
 
 // avoids duplicates in a jar file
@@ -141,7 +141,7 @@ publishing {
                     extension  = 'jar.asc'
                 }
             }
-            def signedPomFile = file("${project.projectDir}/build/api-model-${version}.pom")
+            def signedPomFile = file("${project.projectDir}/build/api-model-${version}.pom.asc")
             if(signedPomFile) {
                 artifact(signedPomFile) {
                     classifier = null
@@ -152,7 +152,7 @@ publishing {
                 def node = asNode()
                 node.children().last() + {
                     resolveStrategy = Closure.DELEGATE_FIRST
-                    name 'project-name'
+                    name 'idn-model'
                     description 'description for project'
                     url 'https://github.com/nbostech/wavelabs-android-client-api'
                     scm {
