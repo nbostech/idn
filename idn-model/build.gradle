@@ -18,6 +18,13 @@
 // gradle generatePomFileForApiModelPublication
 // gradle aMJar aMSJar aMDJar sAMJar sAMSJar sAMDJar myTask publishApiModelPublicationToProjRepoRepository
 
+// gradle clean
+// gradle aMJar aMSJar aMDJar sAMJar sAMSJar sAMDJar gPomFileFAMP
+// gradle --rerun-tasks signApiModelPomF
+// gradle pAMPublicationToProjR
+// gradle pAMPublicationToNbosMavenR
+// gradle pAMPublicationToMaven2R
+
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
@@ -40,6 +47,11 @@ model {
 
 repositories {
     mavenCentral()
+}
+
+ext {
+    apiModelPomFile = file("${project.projectDir}/build/publications/apiModel/pom-default.xml")
+    signedApiModelPomFile = file("${project.projectDir}/build/publications/apiModel/pom-default.xml.asc")
 }
 
 // avoids duplicates in a jar file
@@ -85,11 +97,16 @@ signing {
     sign apiModelDocsJar
 }
 
+task signApiModelPomFile(type:Sign){
+    sign project.ext.apiModelPomFile
+}
+
 def signedFiles = {
     ["signApiModelJar","signApiModelSourceJar","signApiModelDocsJar"].collectMany {
         project.tasks."${it}".signatureFiles.collect { it }
     }
 }
+
 def appendDependencies = { pomNode ->
     def dependenciesNode = pomNode.getAt("dependencies")
 
@@ -199,20 +216,6 @@ task myTask << {
         println "signedfile: ${it}"
     }
 }
-
-/*
-uploadArchives {
-    println "${this.class.name}"
-    repositories {
-        println "This is here"
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> 
-              println" before deployment: ${deployment}" //signing.signPom(deployment) 
-            }
-        }
-    }
-}
-*/
 
 // gradle build
 //    - build/classes/
