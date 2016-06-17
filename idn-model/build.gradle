@@ -26,10 +26,16 @@ apply plugin: 'jvm-component'
 apply plugin: 'java-lang'
 
 group = 'in.wavelabs'
-version = '1.0'
+version = '0.1'
 
 dependencies {
    compile 'commons-collections:commons-collections:3.2.2'
+}
+
+model {
+    tasks.generatePomFileForApiModelPublication {
+        destination = file("$buildDir/api-model-${version}.pom")
+    }
 }
 
 repositories {
@@ -118,7 +124,7 @@ publishing {
                     extension  = 'jar.asc'
                 }
             }
-            def signedPomFile = file("${project.projectDir}/build/publications/apiModel/pom-default.xml")
+            def signedPomFile = file("${project.projectDir}/build/api-model-${version}.pom")
             if(signedPomFile) {
                 artifact(signedPomFile) {
                     classifier = null
@@ -126,12 +132,42 @@ publishing {
                 }
             }
             pom.withXml {
-                asNode().appendNode('description',
-                                    'A demonstration of maven ApiModel customization')
-                appendDependencies(asNode())
+                def node = asNode()
+                node.children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+                    name 'project-name'
+                    description 'description for project'
+                    url 'https://github.com/nbostech/wavelabs-android-client-api'
+                    scm {
+                        url 'https://github.com/nbostech/wavelabs-android-client-api'
+                        connection 'https://github.com/nbostech/wavelabs-android-client-api'
+                        developerConnection 'https://github.com/nbostech/wavelabs-android-client-api'
+                    }
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/license/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id 'vineeln'
+                            name 'Vineel Nalla'
+                            email 'vineeln@nbostech.com'
+                        }
+                        developer {
+                            id 'vivekkiran'
+                            name 'Vivek Kiran'
+                            email 'vivek.kiran@outlook.com'
+                        }
+                    }
+                }
+                appendDependencies(node)
             }
+
         }
-    }
+   }
     repositories {
         maven {
             name 'maven2'
