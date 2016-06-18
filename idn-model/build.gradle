@@ -39,7 +39,7 @@ allprojects {
 }
 
 group = 'in.wavelabs'
-version = '0.2.1'
+version = '0.2.2'
 
 dependencies {
    compile 'commons-collections:commons-collections:3.2.2'
@@ -70,10 +70,10 @@ tasks.withType(Jar) {
 sourceSets {
     apiModel {
         java {
-            srcDir 'src/apiModel/java'
+            srcDir 'src/main/java'
         }
         resources {
-            srcDir 'src/apiModel/resources'
+            srcDir 'src/main/resources'
         }
     }
 }

@@ -22,7 +22,7 @@ public class MemberApiModel {
         return lastName;
     }
 
-    public Long getPhone() {
+    public String getPhone() {
         return phone;
     }
 
@@ -44,7 +44,7 @@ public class MemberApiModel {
 
     String firstName;
     String lastName;
-    Long phone;
+    String phone;
     String description;
     String uuid;
 
