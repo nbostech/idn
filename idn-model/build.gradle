@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-// gradle clean
-// gradle generatePomFileForApiModelPublication
-// gradle aMJar aMSJar aMDJar sAMJar sAMSJar sAMDJar myTask publishApiModelPublicationToProjRepoRepository
 
 // gradle clean
 // gradle aMJar aMSJar aMDJar sAMJar sAMSJar sAMDJar gPomFileFAMP
@@ -25,6 +22,10 @@
 // gradle pAMPublicationToNbosMavenR
 // gradle pAMPublicationToMaven2R
 
+// gradle clean
+// gradle generatePomFileForApiModelPublication
+// gradle aMJar aMSJar aMDJar sAMJar sAMSJar sAMDJar myTask publishApiModelPublicationToProjRepoRepository
+
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
@@ -32,8 +33,13 @@ apply plugin: 'idea'
 apply plugin: 'jvm-component'
 apply plugin: 'java-lang'
 
+allprojects {
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+}
+
 group = 'in.wavelabs'
-version = '0.2'
+version = '0.2.1'
 
 dependencies {
    compile 'commons-collections:commons-collections:3.2.2'
